@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  namespace: homework
+spec:
+  volumes:
+    - name: app-files
+      emptyDir: {}
+  initContainers:
+    - name: init
+      image: busybox:1.37
+      command: ['sh', '-c', 'wget -O /init/index.html https://habr.com/ru/feed/']
+      volumeMounts:
+        - name: app-files
+          mountPath: /init
+  containers:
+    - name: appserver
+      image: nginx
+      imagePullPolicy: Always
+      ports:
+        - containerPort: 8000
+      volumeMounts:
+        - name: app-files
+          mountPath: /homework
+      lifecycle:
+        preStop:
+          exec:
+            command: ["sh", "-c", "rm -rf /homework/index.html" ]
+  restartPolicy: Always
